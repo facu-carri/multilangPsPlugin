@@ -1,11 +1,13 @@
 const { executeNoContext } = require('./execute')
 const { app, constants, action } = require('photoshop')
 
+const batchPlay = async(command, options) => await action.batchPlay(command, options)
+
 function setVisibility(layer, val) {
     layer.visible = val
 }
 
-async function trasnlate(layer, x, y) {
+async function translate(layer, x, y) {
     await layer.translate(x, y)
 }
 
@@ -17,12 +19,12 @@ async function translateByRef(layer, ref){
         offset_x = layer.bounds.left * -1
         offset_y += layer.bounds.height + 15
     }
-    console.log("Layer:", layer.name, "Ref:", ref.name, "x:", offset_x, "y:", offset_y)
-    await executeNoContext(trasnlate, layer, offset_x, offset_y)
+    //console.log("Layer:", layer.name, "Ref:", ref.name, "x:", offset_x, "y:", offset_y)
+    await executeNoContext(translate, layer, offset_x, offset_y)
 }
 
 async function resetPosition(layer) {
-    await executeNoContext(trasnlate, layer, layer.bounds.left * -1, layer.bounds.top * -1)
+    await executeNoContext(translate, layer, layer.bounds.left * -1, layer.bounds.top * -1)
 }
 
 async function deleteLayer(layer){
@@ -39,7 +41,7 @@ async function moveToGroup(layer, group) {
 
 const collapseFolder = (expand = false, recursive = false) => {
     try {
-        action.batchPlay(
+        batchPlay(
         [{
             _obj: "set",
             _target: {_ref: [{ _property: "layerSectionExpanded" },{_ref: "layer",_enum: "ordinal",_value: "targetEnum"}]},
@@ -52,18 +54,9 @@ const collapseFolder = (expand = false, recursive = false) => {
     catch (e) { console.error(e.message) }
 }
 
-async function getBounds(docID, layerID) {
-    return await action.batchPlay(
-        [{
-            _obj: "get",
-            _target: [
-                {_property: "bounds"},
-                {_ref: "layer",_id: layerID},
-                {_ref: "document",_id: docID}
-            ],
-            _options: {dialogOptions: "dontDisplay"}
-        }], {}
-    )
+function select(layer) {
+    const command = [{"_obj":"select","_target":[{"_name":layer.name,"_ref":"layer"}],"layerID":[layer.id],"makeVisible":false}]
+    batchPlay(command, { synchronousExecution: true })
 }
 
 function getWidth(layer) {
@@ -74,4 +67,4 @@ function getHeight(layer) {
     return layer.bounds.height
 }
 
-module.exports = { setVisibility, trasnlate, translateByRef, resetPosition, deleteLayer, createGroup, moveToGroup, collapseFolder, getWidth, getHeight, getBounds }
+module.exports = { setVisibility, translate, translateByRef, resetPosition, deleteLayer, createGroup, moveToGroup, collapseFolder, getWidth, getHeight, select, batchPlay }

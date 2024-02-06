@@ -11,6 +11,9 @@
     }
   },
   "manifestVersion": 5,
+  "requiredPermissions": {
+    "localFileSystem": "fullAccess"
+  },
   "entrypoints": [
     {
       "type": "command",
