@@ -123,7 +123,7 @@ async function initCharLayers() {
   await executeNoContext(setVisibility, template, false)
 
   for (let lang in languajes) {
-    const chars = cleanDuplicatedChars(languajes[lang])
+    const chars = languajes[lang]
     const group = await executeNoContext(createGroup, lang)
 
     await createAlphabeth(template, chars, group)

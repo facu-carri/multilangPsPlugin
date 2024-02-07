@@ -1,6 +1,6 @@
 {
   "id": "MultiLang",
-  "name": "Starter Panel",
+  "name": "MultiLangPlugin",
   "version": "1.0.0",
   "main": "index.html",
   "host": {
@@ -15,11 +15,6 @@
     "localFileSystem": "fullAccess"
   },
   "entrypoints": [
-    {
-      "type": "command",
-      "id": "showAlert",
-      "label": "Show alert"
-    },
     {
       "type": "panel",
       "id": "vanilla",
@@ -74,7 +69,7 @@
         }
       ],
       "label": {
-        "default": "Starter Panel"
+        "default": "MultiLang Panel"
       }
     }
   ],
