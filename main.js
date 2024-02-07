@@ -10,17 +10,11 @@ const languajes = require('./languajesChars.json')
 const TEMPLATE_LAYER = "template"
 const doc = app.activeDocument
 
-showAlert = () => alert("This is an alert message")
-
 entrypoints.setup({
-  commands: {showAlert},
   panels: {vanilla:{show(node){}}}
 })
 
 app.preferences.unitsAndRulers = constants.RulerUnits.PIXELS
-
-window['doc'] = doc
-window['app'] = app
 
 //Alphabet
 
