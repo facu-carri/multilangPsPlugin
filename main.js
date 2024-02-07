@@ -1,9 +1,9 @@
 const { entrypoints } = require("uxp")
-const fsl = require('uxp').storage.localFileSystem
+const fs = require('uxp').storage.localFileSystem
 const types = require('uxp').storage.types
 const { app, constants } = require('photoshop')
-const { resetPosition, setVisibility, deleteLayer, createGroup, moveToGroup, collapseFolder, getWidth, getHeight, trasnlate, select, translate, batchPlay } = require('./LayerFunctions.js')
-const { changeText } = require('./TextLayerFunctions.js')
+const { resetPosition, setVisibility, deleteLayer, createGroup, moveToGroup, collapseFolder, getWidth, getHeight, trasnlate, select, translate, batchPlay, duplicateEffects, getIndex } = require('./LayerFunctions.js')
+const { changeText, getStyle, setStyle, duplicateStyles } = require('./TextLayerFunctions.js')
 const { executeNoContext } = require('./execute.js')
 const languajes = require('./languajesChars.json')
 
@@ -33,7 +33,6 @@ async function createCharLayer(ref, template, name){
 async function createAlphabeth(template, chars, group){
   for (let i = 0; i < chars.length; i++){
     const char = chars.at(i)
-    if (!!doc.layers.getByName(char)) continue
     const charLayer = await executeNoContext(createCharLayer, doc, template, char)
 
     await executeNoContext(changeText, charLayer, char)
@@ -49,13 +48,15 @@ function getMaxDims(group) {
 
 async function organizateAlphabeth(group) {
   const max = getMaxDims(group)
-  const padding = 5
-  const rowElemQty = Math.floor(doc.width / (max.width + padding))
-  const rows = Math.floor((group.layers.length - 1) / rowElemQty) + 1
-  
+  const groupLen = group.layers.length
+  const rowElemQty = Math.round(Math.sqrt(groupLen)) + 1
+  const rows = Math.floor((groupLen- 1) / rowElemQty) + 1
+
+  console.log(rowElemQty, rows)
+
   await executeNoContext(resizeCanvas, max.width * rowElemQty, max.height * rows)
 
-  for (let i = 0; i < group.layers.length; i++){
+  for (let i = 0; i < groupLen; i++){
     const layer = group.layers[i]
     const row = i % rowElemQty
     const column = Math.floor(i / rowElemQty)
@@ -95,7 +96,13 @@ async function saveDoc() {
 async function setToken() {
   const basepath = window.path.resolve()
   const output = window.path.join(basepath, 'output')
-  const folder = await fs.createEntryWithUrl(output, { type: types.folder, overwrite: true })
+  let folder
+  try {
+    folder = await fs.getEntryWithUrl(output)
+  }
+  catch (err) {
+    folder = await fs.createEntryWithUrl(output, { type: types.folder, overwrite: true })
+  }
   const token = await fs.createPersistentToken(folder)
   localStorage.setItem('token', token)
 }
@@ -104,9 +111,16 @@ function cleanDuplicatedChars(e) {
   return [...new Set(e)].sort().join("")
 }
 
+function logTime(txt) {
+  const time = new Date()
+  console.log(`${txt} Time -> ${time.getHours()}:${time.getMinutes()}`)
+}
+
 async function initCharLayers() {
   const template = doc.layers.getByName(TEMPLATE_LAYER)
   
+  logTime('Start')
+
   await setToken()
   await executeNoContext(setVisibility, template, false)
 
@@ -114,14 +128,13 @@ async function initCharLayers() {
     const chars = cleanDuplicatedChars(languajes[lang])
     const group = await executeNoContext(createGroup, lang)
 
-    await executeNoContext(collapseFolder, false, true)
     await createAlphabeth(template, chars, group)
     await organizateAlphabeth(group)
     await executeNoContext(exportAlphabeth, group.name)
     await executeNoContext(setVisibility, group, false)
     await executeNoContext(select, template)
   }
-  await saveDoc()
+  logTime('End')
 }
 
 async function deleteLayers() {
@@ -136,17 +149,22 @@ async function forceResize() {
   await executeNoContext(resizeCanvas, 800, 800)
 }
 
-async function test() {
+async function editGroups() {
   const template = doc.layers.getByName(TEMPLATE_LAYER)
-  /*const group = await executeNoContext(createGroup, 'en')
-  const layer = await executeNoContext(createCharLayer, doc, template, 'test')
-  await executeNoContext(moveToGroup, layer, group)*/
-  //await executeNoContext(exportAlphabeth, 'test')
-  const currentPath = window.path.resolve()
-  const output = window.path.join(currentPath, 'output')
-  //createEntryWithUrl overrite type folder
-  //require('fs').mkdir('file:///C:/Users/FACU/Desktop/test', (err) => console.log(err))
+  const docLayers = doc.layers
 
+  for (let i = 0; i < docLayers.length; i++){
+    const layer = docLayers[i]
+    if (layer.kind == constants.LayerKind.GROUP && layer.visible) {
+      const groupLayers = layer.layers
+      for (let j = 0; j < groupLayers.length; j++){
+        const groupLayer = groupLayers[j]
+        console.log(groupLayer.name)
+        //await executeNoContext(duplicateEffects, template, groupLayer)
+        await executeNoContext(duplicateStyles, template, groupLayer)
+      }
+    }
+  }
 }
 
 async function translateLayer() {
@@ -170,5 +188,5 @@ function getElementValue(name) {
 document.getElementById("btnPopulate").addEventListener("click", initCharLayers)
 document.getElementById("btnDelete").addEventListener("click", deleteLayers)
 document.getElementById("btnResize").addEventListener("click", forceResize)
-document.getElementById("btnGroup").addEventListener("click", test)
 document.getElementById("btnTranslate").addEventListener("click", translateLayer)
+document.getElementById("btnEdit").addEventListener("click", editGroups)

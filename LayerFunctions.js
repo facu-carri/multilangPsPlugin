@@ -1,7 +1,7 @@
 const { executeNoContext } = require('./execute')
 const { app, constants, action } = require('photoshop')
 
-const batchPlay = async(command, options) => await action.batchPlay(command, options)
+const batchPlay = async (command, options = {}) => { return await action.batchPlay(command, options) }
 
 function setVisibility(layer, val) {
     layer.visible = val
@@ -67,4 +67,33 @@ function getHeight(layer) {
     return layer.bounds.height
 }
 
-module.exports = { setVisibility, translate, translateByRef, resetPosition, deleteLayer, createGroup, moveToGroup, collapseFolder, getWidth, getHeight, select, batchPlay }
+async function getIndex(layer) {
+    const command = [{
+        _obj: "get",
+        _target: [
+            {_property: "itemIndex"},
+            {_ref: "layer",_id: layer.id},
+            {_ref: "document",_id: app.activeDocument.id}
+        ],
+        _options: {dialogOptions: "dontDisplay"}
+    }]
+    return (await batchPlay(command))[0].itemIndex
+}
+
+async function duplicateEffects(ref, to) {
+    const index = await getIndex(to)
+    console.log(index)
+    const command = [
+    {
+        _obj: "duplicate",
+        _target: [
+            {_ref: "layerEffects"},
+            {_ref: "layer",_name: ref.name}
+        ],
+        to: {_ref: "layer",_index: index},
+        _options: {dialogOptions: "dontDisplay"}
+    }]
+    await batchPlay(command, { synchronousExecution: true })
+}
+
+module.exports = { setVisibility, translate, translateByRef, resetPosition, deleteLayer, createGroup, moveToGroup, collapseFolder, getWidth, getHeight, select, batchPlay, duplicateEffects, getIndex }
