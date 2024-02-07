@@ -90,7 +90,7 @@ async function exportAlphabeth(name) {
 }
 
 async function saveDoc() {
-  await executeNoContext(doc.save)
+  await doc.save()
 }
 
 async function setToken() {
@@ -118,8 +118,6 @@ function logTime(txt) {
 
 async function initCharLayers() {
   const template = doc.layers.getByName(TEMPLATE_LAYER)
-  
-  logTime('Start')
 
   await setToken()
   await executeNoContext(setVisibility, template, false)
@@ -134,7 +132,7 @@ async function initCharLayers() {
     await executeNoContext(setVisibility, group, false)
     await executeNoContext(select, template)
   }
-  logTime('End')
+  await executeNoContext(saveDoc)
 }
 
 async function deleteLayers() {
@@ -171,13 +169,10 @@ async function translateLayer() {
   const layerName = getElementValue('translateLayer')
   const translate_x = parseInt(getElementValue('translateX'))
   const translate_y = parseInt(getElementValue('translateY'))
-  //console.log(layer, translate_x, translate_y)
   const layer = layerName.indexOf('.') != -1 ? doc.layers.getByName(layerName.split('.')[0]).layers.getByName(layerName.split('.')[1]) : doc.layers.getByName(layerName)
 
   await executeNoContext(select, layer)
   await executeNoContext(translate, layer, translate_x, translate_y)
-  console.log(layer.bounds)
-  //await executeNoContext(async (x,y) => await layer.translate(x,y), translate_x, translate_y)
 }
 
 function getElementValue(name) {
