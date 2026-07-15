@@ -2,8 +2,8 @@ const { entrypoints } = require("uxp")
 const fs = require('uxp').storage.localFileSystem
 const types = require('uxp').storage.types
 const { app, constants } = require('photoshop')
-const { resetPosition, setVisibility, deleteLayer, createGroup, moveToGroup, collapseFolder, getWidth, getHeight, trasnlate, select, translate, batchPlay, duplicateEffects, getIndex } = require('./LayerFunctions.js')
-const { changeText, getStyle, setStyle, duplicateStyles } = require('./TextLayerFunctions.js')
+const { resetPosition, setVisibility, deleteLayer, createGroup, moveToGroup, getWidth, getHeight, select, translate } = require('./LayerFunctions.js')
+const { changeText, duplicateStyles } = require('./TextLayerFunctions.js')
 const { executeNoContext } = require('./execute.js')
 const languajes = require('./languajesChars.json')
 
